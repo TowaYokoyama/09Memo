@@ -22,7 +22,7 @@ export const createMemo = async(content:string, title:string):Promise<string>=>{
         title,
         createdAt:new Date(),
     };
-    const docRef=await addDoc(memosCollectionRef, newMemo);
+    const docRef = await addDoc(memosCollectionRef, newMemo);
     return docRef.id;
 };
 

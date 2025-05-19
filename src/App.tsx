@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import EditMemoEditor from "./Components/EditMemoEditor";
-import { Grab, Plus } from "lucide-react";
-import { createMemo, getAllMemos, updateMemo, deleteMemo } from "./api/memos"
+import EditMemoEditor from "./Components/EditMemoEditor"; //メモの右側のエディタ部分
+import { Grab, Plus } from "lucide-react"; //lucidは軽量なフレームワーク
+import { createMemo, getAllMemos, updateMemo, deleteMemo } from "./api/memos" //Firestreとのcrudをまとめた関数群
 import { Delete } from 'lucide-react';
 
 
@@ -13,8 +13,8 @@ import {
   PointerSensor,
   useSensor,
   useSensors,
-  //DragEndEvent, 削除エラーでたからいったん
 } from "@dnd-kit/core";
+//Dnd（ドラッグアンドドロップ用の基本コンポーネントやユーティリティを読み込む）
 
 import {
   SortableContext,
@@ -22,18 +22,15 @@ import {
   useSortable,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
+//並び替え可能にするためのキット
 
 import { CSS } from "@dnd-kit/utilities";
+//ドラッグ中のcss変形を可能にするユーティリティ
+
 // App.tsx
 import type { Memo } from "./types";
+//types.tsからの型定義をインポート
 
-/*type Memo = {
-  id: string;
-  title: string;
-  content: string;
-  createdAt: string;
-  updateAt?: string;
-};*/
 
 interface SortableItemProps {
   id: string;          // アイテムの一意なID
@@ -46,7 +43,7 @@ interface SortableItemProps {
 }
 
 // SortableItemコンポーネントの定義
-const SortableItem: React.FC<SortableItemProps> = ({
+const SortableItem: React.FC<SortableItemProps> = ({ //Propsをオブジェクト分割代入している
   id,
   title,
   createdAt,
@@ -62,7 +59,7 @@ const SortableItem: React.FC<SortableItemProps> = ({
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: id.toString() });
+  } = useSortable({ id: id.toString() });//この要素をドラッグ可能にする
 
   const style: React.CSSProperties = {
     transform: CSS.Transform.toString(transform),
@@ -80,10 +77,10 @@ const SortableItem: React.FC<SortableItemProps> = ({
 
   return (
     <div
-      ref={setNodeRef}
+      ref={setNodeRef} //このdivがdrag可能であるということを通知
       style={style}
       className="select-none"
-      onClick={onClick} // メモ選択用
+      onClick={onClick} // メモを選択した時の処理
     >
       <div className="font-bold">{title}</div>
       <div className="text-xs text-gray-500">
@@ -96,7 +93,7 @@ const SortableItem: React.FC<SortableItemProps> = ({
         <button
           onClick={(e) => {
             e.stopPropagation(); // 親のonClickを防ぐ
-            onDelete();
+            onDelete(); //削除処理を実行
           }}
           className="text-red-500 hover:underline text-sm"
           aria-label="Delete memo"
@@ -145,16 +142,16 @@ const App: React.FC = () => {
   //初回読み込みでFirestoreからデータを取得
   useEffect(()=>{
     const fetchMemos = async() => {
-      const fetched = await getAllMemos();
-      setMemo(fetched);
+      const fetched = await getAllMemos(); //getALlMemosはfirestoreにある全メモをとってくる自作API関数
+      setMemo(fetched); //ステートに保存
       if (fetched.length>0) setSelectedMemoId(fetched[0].id);
     };
     fetchMemos();
   },[]);
 
   const AddMemo = async() => {
-    if (newtitle.trim() === "") return;
-    const now = new Date().toLocaleString();
+    if (newtitle.trim() === "") return; //メモ欄が空白だったら中止
+    const now = new Date().toLocaleString(); //現在日時を取得
 
     const id = await createMemo("", newtitle); // Firestoreに保存してIDを取得
 
@@ -167,27 +164,27 @@ const App: React.FC = () => {
     };
     
     //await createMemo(newMemo);//追加
-    setMemo((prev) => [...prev, newMemo]);
-    setNewTitle("");
-    setSelectedMemoId(newMemo.id);
+    setMemo((prev) => [...prev, newMemo]); //既存の配列に追加
+    setNewTitle(""); //入力欄をクリア
+    setSelectedMemoId(newMemo.id); //作成したメモを選択状態に
   };
 
   const DeleteMemo = async(id: string) => {
-    await deleteMemo(id)
-    setMemo((prev) => prev.filter((memo) => memo.id !== id));
-    if (selectedMemoId === id) setSelectedMemoId(null);
+    await deleteMemo(id); //firestoreから削除
+    setMemo((prev) => prev.filter((memo) => memo.id !== id));//ローカルからも除外
+    if (selectedMemoId === id) setSelectedMemoId(null); //削除氏らメモが選択中なら選択解除
   };
 
   const SaveMemoWithHtml = async(id: string, html: string) => {
-    const now = new Date().toLocaleString();
+    const now = new Date().toLocaleString(); //保存時間
 
 
     setMemo((prev) =>
       prev.map((memo) => 
-        (memo.id === id ? { ...memo, content: html, updateAt: now } : memo)
+        (memo.id === id ? { ...memo, content: html, updateAt: now } : memo)//もし現在の状態と同じidであるならばオブジェクトを渡す
   )
     );
-    await updateMemo(id,html, selectedMemo?.title?? "")//追加
+    await updateMemo(id,html, selectedMemo?.title?? "")//Firestoreに反映
   };
   
 
